@@ -1,10 +1,35 @@
-import React from "react";
+import React, {useContext} from "react";
 import { withStyles } from "@material-ui/core/styles";
-// import ExitToApp from "@material-ui/icons/ExitToApp";
-// import Typography from "@material-ui/core/Typography";
+import {GraphQLClient} from "graphql-request";
+import {GoogleLogout} from "react-google-login";
+import { useHistory } from "react-router-dom";
+import Context from "../../context";
+import {ME_QUERY} from "../../graphql/queries";
+
+
 
 const Signout = ({ classes }) => {
-  return <div>Signout</div>;
+  const history = useHistory();
+  const {state, dispatch} = useContext(Context);
+  
+  const onLogoutFailure = (e) => {
+    console.log(e);
+  }
+
+  const onLogoutSuccess = () => {
+    dispatch({type: "LOGOUT"});
+  }
+
+  return (
+    <div className={classes.root}>
+      <GoogleLogout
+        clientId="30905357343-rjlu4p5kc9qhllvj48pdk9gondvjo0qr.apps.googleusercontent.com"
+        buttonText="Sign out" 
+        onLogoutSuccess={onLogoutSuccess}
+        onLogoutFailure={onLogoutFailure}
+        theme="dark" />
+      </div>
+  );
 };
 
 const styles = {

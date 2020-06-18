@@ -9,4 +9,14 @@ const ME_QUERY = `
 }
 `;
 
-export {ME_QUERY};
+const MY_LOCATION_QUERY = `
+    
+{
+    myLocation {
+        latitude
+        longitude
+    }
+}
+    `;
+
+export {ME_QUERY, MY_LOCATION_QUERY}; 

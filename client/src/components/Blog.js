@@ -1,9 +1,17 @@
 import React from "react";
 import { withStyles } from "@material-ui/core/styles";
-// import { Paper } from "@material-ui/core";
+import { Paper } from "@material-ui/core";
+import NoContent from "./Pin/NoContent";
+import CreatePin from "./Pin/CreatePin";
 
-const Blog = ({ classes }) => {
-  return <div>Blog</div>;
+const Blog = ({ classes, draftPin }) => {    
+  return (
+    <Paper className={classes.root}>
+      {
+        !draftPin ? <NoContent /> : <CreatePin />
+      }
+    </Paper>
+  );
 };
 
 const styles = {
@@ -13,7 +21,8 @@ const styles = {
     maxHeight: "calc(100vh - 64px)",
     overflowY: "scroll",
     display: "flex",
-    justifyContent: "center"
+    flexDirection: "row",
+    justifyContent: "center",
   },
   rootMobile: {
     maxWidth: "100%",

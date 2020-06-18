@@ -15,7 +15,7 @@ const Login = ({ classes }) => {
   const onSuccess = async (googleUser) => {
     try {
       const idToken = googleUser.getAuthResponse().id_token;
-      const client = new GraphQLClient("http://localhost:4000", {
+      const client = new GraphQLClient("http://as.be.ngrok.io/graphql", {
         headers: {
           authorization: idToken
         }
@@ -23,8 +23,9 @@ const Login = ({ classes }) => {
   
       const {me: loggedInUser} = await client.request(ME_QUERY);
 
-      dispatch({type: 'SAVE_USER', user: loggedInUser});
+      dispatch({type: 'SAVE_USER', user: {...loggedInUser, token: idToken}});
       dispatch({type: 'IS_LOGGED_IN', isLoggedIn: googleUser.isSignedIn()});
+      history.push("/")
       
     } catch(e) {
       console.log(e);

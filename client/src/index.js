@@ -9,26 +9,29 @@ import {
   Switch,
   Route,
 } from "react-router-dom";
-import Authorized from "./components/Authorized";
 
+import {ApolloProvider} from "@apollo/react-hooks"
+import AuthorizedRoute from "./components/AuthorizedRoute";
+import 'mapbox-gl/dist/mapbox-gl.css';
+import  ApolloClient from "apollo-boost";
 
+const client = new ApolloClient("http://as.be.ngrok.io/graphql");
 const Root = () => {
   const initialState = useContext(Context);
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  console.log({state})
-
   return (
     <Router>
-      <Context.Provider value={{ state, dispatch }}>
-        <Switch>
-          <Route path="/login" component={Splash} />
-
-          <Authorized>
-            <Route exact path="/" component={App} />
-          </Authorized>
-        </Switch>
-      </Context.Provider>    </Router>
+      <ApolloProvider>
+        <Context.Provider value={{ state, dispatch }}>
+          <Switch>
+            <AuthorizedRoute exact path="/" component={App} redirectTo="/login"/>
+            <Route path="/login" component={Splash} />
+          </Switch>
+        </Context.Provider>
+  
+      </ApolloProvider>
+    </Router>
   );
 }
 
