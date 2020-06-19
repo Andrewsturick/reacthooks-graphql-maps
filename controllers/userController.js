@@ -20,7 +20,6 @@ const createNewUser = async ({name, email, picture}) => await User.create({
 });
 
 const verifyAuthToken = async (token) => {
-    console.log({token})
     try {
         const user = await client.verifyIdToken({
             idToken: token,

@@ -9,20 +9,21 @@ import {
   Switch,
   Route,
 } from "react-router-dom";
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { HttpLink } from 'apollo-link-http';
+import { ApolloClient } from '@apollo/client';
 
 import {ApolloProvider} from "@apollo/react-hooks"
 import AuthorizedRoute from "./components/AuthorizedRoute";
 import 'mapbox-gl/dist/mapbox-gl.css';
-import  ApolloClient from "apollo-boost";
 
-const client = new ApolloClient("http://as.be.ngrok.io/graphql");
+
 const Root = () => {
   const initialState = useContext(Context);
   const [state, dispatch] = useReducer(reducer, initialState);
 
   return (
     <Router>
-      <ApolloProvider>
         <Context.Provider value={{ state, dispatch }}>
           <Switch>
             <AuthorizedRoute exact path="/" component={App} redirectTo="/login"/>
@@ -30,7 +31,6 @@ const Root = () => {
           </Switch>
         </Context.Provider>
   
-      </ApolloProvider>
     </Router>
   );
 }

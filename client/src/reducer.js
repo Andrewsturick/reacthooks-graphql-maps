@@ -10,10 +10,16 @@ const reducer = (state, {type, ...action}) => {
             return {...state, location: action.location, isLoadingMapData: false};
         case "IS_LOADING_MAP_DATA":
             return {...state, isLoadingMapData: action.isLoadingMapData};
-        case "ADD_DRAFT_PIN":
+        case "SET_DRAFT_PIN":
             return  {...state, draftPin: action.pin};
         case "ADD_PIN":
             return {...state, pins: state.pins.concat(action.pin)};
+        case "SET_PINS":
+             return {...state, pins: action.pins};
+        case "CACHE_APOLLO_CLIENT":
+            return {...state, client: action.client};
+        case "SAVE_GOOGLE_TOKEN":
+            return {...state, token: action.token}    
         default:
             return state;
 }

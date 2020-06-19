@@ -1,46 +1,93 @@
 import React, {useState, useContext} from "react";
+import Context from "../../context";
 import { withStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import AddAPhotoIcon from "@material-ui/icons/AddAPhotoTwoTone";
 import LandscapeIcon from "@material-ui/icons/LandscapeOutlined";
+import CameraTwoToneIcon from "@material-ui/icons/CameraTwoTone"
 import ClearIcon from "@material-ui/icons/Clear";
 import SaveIcon from "@material-ui/icons/SaveTwoTone";
-// import {gql} from "graphql-tag"
-
-//  const SAVE_IMAGE_MUTATION = gql`
-//   mutation saveImageMutation($file: Upload) {
-//     saveImage(file: $file) {
-//       url
-//     }
-//   }
-// `;
+import gql from "graphql-tag"
+import {useMutation} from "@apollo/client"
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { HttpLink } from 'apollo-link-http';
+import { ApolloClient } from '@apollo/client';
+import axios from "axios";
+import {GraphQLClient} from "graphql-request";
+import { getGraphQLClient } from "../../helpers";
+import {SAVE_PIN} from "../../graphql/mutations";
+const SAVE_IMAGE_MUTATION = `
+  mutation saveImageMutation($file: Upload!) {
+    saveImageFile(file: $file) {
+      url
+    }
+  }
+`;
 
 const CreatePin = ({ classes }) => {
+  const {state, dispatch} = useContext(Context);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [imageData, setImage] = useState("");
   const [loadingImage, setLoadingImage] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
-  // const [saveImage, { loading: mutationLoading, error: mutationError }] = useMutation(
-  //   SAVE_IMAGE_MUTATION,
-  //   {
-  //     update(cache, { data: { saveImage: {url}}}) {
-  //       setLoadingImage(false);
-  //       setImageUrl(url)
-  //     },
-  //     variables: {file: imageData}
-  //   },
-  // );
 
-  function onSelectImage(event) {  
-    setLoadingImage(true);
-
-    return setImage(event.target.files[0]);
-  }
+  // const [setImageUrl, {data: urlData}] = useMutation(SAVE_IMAGE_MUTATION, {client: new ApolloClient({
+  //   link: new HttpLink(),
+  //   cache: new InMemoryCache(),
+  //   url: "http://as.be.ngrok.io/graphql",
+  // })});
   
-  console.log({imageData})
+  async function handleSavePin() {
+    const client = getGraphQLClient(state.token);
+    const {savePin: pin} = await client.request(SAVE_PIN, {
+      pin: {
+        title,
+        content,
+        image: imageUrl,
+        latitude: state.draftPin.latitude,
+        longitude: state.draftPin.longitude,
+        author: state.currentUser._id,
+      }
+    });
+
+    if (pin) {
+      dispatch({type: "SET_DRAFT_PIN", pin: null})
+      dispatch({type: "ADD_PIN", pin})
+    }
+  }
+
+  function handleDiscardPin() {
+    setImage("");
+    setImageUrl("");
+    setTitle("");
+    setContent("");
+    dispatch({type: "SET_DRAFT_PIN", pin: null})
+  }
+
+  async function onSelectImage(event) {
+    setLoadingImage(true);
+    const file = event.target.files[0];
+    setImage(file);
+    const data = new FormData();
+    
+    data.append("file", file)
+    data.append("upload_preset", "geopins")
+    data.append("cloud_name", "andrewmaps")
+    // const client = getGraphQLClient(state);
+    // console.log("SELECTING IMASIGIRII")
+    // const url = await client.request(SAVE_IMAGE_MUTATION, {file: data});
+
+    setImageUrl({variables: {file}});
+    const {data: {url}} = await axios.post("https://api.cloudinary.com/v1_1/andrewmaps/image/upload", data);
+
+    setImageUrl(url);
+    setLoadingImage(false);
+  }
+  console.log(imageUrl)
+  
   return (
     <form className={classes.form}>
       <Typography
@@ -52,13 +99,20 @@ const CreatePin = ({ classes }) => {
         <LandscapeIcon className={classes.iconLarge}/>Pin Location
       </Typography>
       <div className={classes.imageDisplay}>
-        {loadingImage ? (<span>loading</span>) : (<img src={imageUrl}></img>)}
+        {
+          !imageUrl ?
+            (<div className={classes.uploadPicturePlaceholder}>
+
+              <AddAPhotoIcon className={classes.uploadPictureIcon}/>
+            </div>) :
+            (<img className={classes.image} src={imageUrl}></img>)
+        }
       </div>
       <div>
-        <TextField name="title" label="Title" value={title} onChange={({target}) => setTitle(target.value)} placeholder="Insert pin title here"/>
+        <TextField  style={{marginRight: "15px"}} name="title" label="Title" value={title} onChange={({target}) => setTitle(target.value)} placeholder="Insert pin title here"/>
         <input accept="image/*" id="image" type="file" className={classes.input} onChange={onSelectImage}/>
         <label htmlFor="image">
-          <Button component="span" size="small" className={classes.button} style={{color: imageData ? "green" : ""}}>
+          <Button component="span" size="small" className={classes.button} style={{backgroundColor: "#aaaaaa", color: imageData ? "green" : ""}}>
             <AddAPhotoIcon />
           </Button>
         </label>
@@ -79,14 +133,16 @@ const CreatePin = ({ classes }) => {
         <Button
           className={classes.button}
           variant="contained"
-          color="primary">
+          color="primary"
+          onClick={handleDiscardPin}>
             <ClearIcon className="leftIcon"/> Discard
         </Button>
         <Button
           className={classes.button}
           variant="contained"
-          color="secondary">
-            Save <SaveIcon className="rightIcon"/> 
+          color="secondary"
+          onClick={handleSavePin}>
+            Save <SaveIcon className={classes.rightIcon}/> 
         </Button>
       </div>
     </form>
@@ -101,7 +157,11 @@ const styles = theme => ({
   },
   imageDisplay: {
     position: "relative",
-    height: "20vh"
+    marginTop: "5%",
+    height: "25%",
+    minWidth: "80%",
+    maxHeight: "100%",
+    maxWidth: "80%",
   },
   form: {
     display: "flex",
@@ -115,12 +175,29 @@ const styles = theme => ({
     marginRight: theme.spacing.unit,
     width: "95%"
   },
+  image: {
+    maxWidth: "100%",
+    maxHeight: "100%"
+
+    // height: "auto",
+    // width: "auto"
+  },
   input: {
     display: "none"
   },
   alignCenter: {
     display: "flex",
     alignItems: "center"
+  },
+  uploadPicturePlaceholder:{
+    color: "white",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#aaaaaa",
+  },
+  uploadPictureIcon: {
+    width: "100%",
+    height: "100%"
   },
   iconLarge: {
     fontSize: 40,
@@ -138,7 +215,7 @@ const styles = theme => ({
     marginTop: theme.spacing.unit * 2,
     marginBottom: theme.spacing.unit * 2,
     marginRight: theme.spacing.unit,
-    marginLeft: 0
+    marginLeft: 0,
   }
 });
 

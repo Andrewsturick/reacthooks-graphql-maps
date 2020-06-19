@@ -1,11 +1,11 @@
 import React, {useContext} from "react";
 import { withStyles } from "@material-ui/core/styles";
-import {GraphQLClient} from "graphql-request";
+
 import GoogleLoginButton from "react-google-login";
 import { useHistory } from "react-router-dom";
 import Context from "../../context";
 import {ME_QUERY} from "../../graphql/queries";
-
+import {getGraphQLClient} from "../../helpers";
 
 const Login = ({ classes }) => {
   const history = useHistory();
@@ -15,16 +15,15 @@ const Login = ({ classes }) => {
   const onSuccess = async (googleUser) => {
     try {
       const idToken = googleUser.getAuthResponse().id_token;
-      const client = new GraphQLClient("http://as.be.ngrok.io/graphql", {
-        headers: {
-          authorization: idToken
-        }
-      })
-  
+      dispatch({type: "SAVE_GOOGLE_TOKEN", token: idToken})
+
+      const client = getGraphQLClient(idToken);
+      
       const {me: loggedInUser} = await client.request(ME_QUERY);
 
       dispatch({type: 'SAVE_USER', user: {...loggedInUser, token: idToken}});
       dispatch({type: 'IS_LOGGED_IN', isLoggedIn: googleUser.isSignedIn()});
+      
       history.push("/")
       
     } catch(e) {

@@ -5,6 +5,9 @@ import Context from "../context";
 import PinIcon from "./PinIcon"
 import MeIcon from "./MeIcon";
 import Blog from "./Blog";
+import { getGraphQLClient } from "../helpers";
+import { PINS } from "../graphql/queries";
+import {useClient} from "../hooks";
 // import Button from "@material-ui/core/Button";
 // import Typography from "@material-ui/core/Typography";
 // import DeleteIcon from "@material-ui/icons/DeleteTwoTone";
@@ -17,6 +20,17 @@ const initialViewPort = {
 const Map = ({ classes, location, onClickMap}) => {
   const {state, dispatch} = useContext(Context);
   const [viewPort, setViewPort]  = useState(initialViewPort);
+  const client = useClient(state.token)
+
+  useEffect(() => {
+    async function getPins() {
+      console.log(client)     
+      if (!client) return;
+      const {pins} = await client.request(PINS);
+      dispatch({type: "SET_PINS", pins})
+    }
+    getPins();
+  }, [client]);
 
   useEffect(() => {
     setViewPort({...location, zoom: 13})
@@ -73,7 +87,7 @@ const Map = ({ classes, location, onClickMap}) => {
             offsetTop={-13}
             offsetLeft={-13}
           >
-              <PinIcon color="red" size="30"/>
+              <PinIcon color="green" size="30"/>
               
           </Marker>
         </>
