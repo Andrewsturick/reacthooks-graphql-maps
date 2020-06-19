@@ -1,16 +1,17 @@
 import React, {useContext, useState, useEffect} from "react";
 import { withStyles } from "@material-ui/core/styles";
-import ReactMapGL, {Marker, NavigationControl} from "react-map-gl";
+import ReactMapGL, {Marker, NavigationControl, Popup} from "react-map-gl";
 import Context from "../context";
 import PinIcon from "./PinIcon"
 import MeIcon from "./MeIcon";
 import Blog from "./Blog";
-import { getGraphQLClient } from "../helpers";
 import { PINS } from "../graphql/queries";
+import {DELETE_PIN} from "../graphql/mutations"
 import {useClient} from "../hooks";
-// import Button from "@material-ui/core/Button";
-// import Typography from "@material-ui/core/Typography";
-// import DeleteIcon from "@material-ui/icons/DeleteTwoTone";
+import { Typography } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import DeleteIcon from "@material-ui/icons/DeleteTwoTone";
+
 const initialViewPort = {
   zoom: 13,
   longitude: 122.4376,
@@ -21,10 +22,10 @@ const Map = ({ classes, location, onClickMap}) => {
   const {state, dispatch} = useContext(Context);
   const [viewPort, setViewPort]  = useState(initialViewPort);
   const client = useClient(state.token)
-
+  const {currentPin, draftPin}  = state;
+  console.log(currentPin)
   useEffect(() => {
-    async function getPins() {
-      console.log(client)     
+    async function getPins() {   
       if (!client) return;
       const {pins} = await client.request(PINS);
       dispatch({type: "SET_PINS", pins})
@@ -36,6 +37,29 @@ const Map = ({ classes, location, onClickMap}) => {
     setViewPort({...location, zoom: 13})
   }, [location && location.latitude])
 
+  const highlightIfRecent = (pin) =>{
+    if (Date.now() - pin.createdAt < 60 * 30 * 1000) return "red";
+    
+    return "purple";
+  };
+
+  const isPinOwner = (pin, user) => {
+    return pin.author._id === user._id
+  }
+
+  const setCurrentPin = (pin) => {
+    dispatch({type: "SET_CURRENT_PIN", pin});
+  }
+
+  const deleteCurrentPin = async ({_id}) => {
+    const variables = {pin: {_id}}
+    const {deletePin: deletedPin} = await client.request(DELETE_PIN, variables);
+    if (deletedPin) {
+      dispatch({type: "SET_CURRENT_PIN"});
+      dispatch({type: "DELETE_CURRENT_PIN", pin: deletedPin});
+    }
+  }
+  
   return (
     <div className={classes.root}>
       <ReactMapGL
@@ -63,7 +87,11 @@ const Map = ({ classes, location, onClickMap}) => {
                 offsetTop={-13}
                 offsetLeft={-13}
               >
-                <PinIcon color="red" size="30"/>
+                <PinIcon
+                  onClick={() => {
+                    setCurrentPin(pin)
+                  }}
+                  color={highlightIfRecent(pin)} size="30"/>
               </Marker>)
           })
         }
@@ -88,16 +116,43 @@ const Map = ({ classes, location, onClickMap}) => {
             offsetLeft={-13}
           >
               <PinIcon color="green" size="30"/>
-              
           </Marker>
         </>
       }
+      {
+        currentPin && 
+        <Popup
+          latitude={currentPin.latitude}
+          longitude={currentPin.longitude}
+          anchor="top"
+          closeOnClick={false}
+          onClose={() => setCurrentPin()}
+        >
+          <img src={currentPin.image} className={classes.popupImage}/>
+          <div className={classes.popupTab}>
+            <Typography>
+              longitude: {currentPin.longitude.toFixed(6)}
+            </Typography>
+            <Typography>
+              latitude: {currentPin.latitude.toFixed(6)}
+            </Typography>
+            {
+              isPinOwner(currentPin, state.currentUser) && 
+              <div>
+                <Button onClick={() => deleteCurrentPin(currentPin)} color="primary">
+                  <DeleteIcon />
+                </Button>
+              </div>
+            }
+          </div>
+        </Popup>
+      }
       </ReactMapGL>
-      <Blog draftPin={state.draftPin} />
-
+      <Blog pin={currentPin || draftPin} />
     </div>
   )
 };
+
 
 const styles = {
   root: {

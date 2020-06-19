@@ -25,6 +25,21 @@ const  PINS = `
             title
             content
             _id
+            image
+            createdAt
+            comments {
+                text
+                createdAt
+                _id
+                author {
+                    name
+                    picture
+                }
+            }
+            author {
+                _id
+                name
+            }
         }
     }
 `;

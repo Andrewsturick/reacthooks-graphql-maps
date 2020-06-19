@@ -1,3 +1,6 @@
+const { PubSub, withFilter } = require("apollo-server");
+const pubsub = new PubSub();
+
 const user = {
     name: "Andrew",
     email: "Andrew.sturick@gmail.com",
@@ -15,8 +18,10 @@ const resolvers = {
 
             return {latitude, longitude}
         },
-        pins(root, args, context) {
-            return context.models.Pin.find({}).lean().exec();
+        async pins(root, args, context) {
+            const pins = await context.models.Pin.find({}).populate("author").lean().exec();
+            console.log("ping ", pins[0].comments.map(console.log))
+            return pins;
         }
     },
     Mutation: {
@@ -31,15 +36,57 @@ const resolvers = {
             }
 
             const newPin = await context.models.Pin.create({...args.pin, createdAt: Date.now() + "", comments: []});
-
+            pubsub.publish("ADD_PIN", {addPin: newPin})
             return newPin;
+        },
+        async deletePin (root, args, context) {
+            const deletedPin = await context.models.Pin.findOneAndDelete({_id: args.pin._id});
+
+            if (deletedPin && deletedPin._id) {
+                pubsub.publish("DELETE_PIN", {deletePin: deletedPin})
+                return deletedPin;
+            }
+
+            throw new Error("could not delete pin");
+        },
+        async saveComment (root, args, context) {
+            const pin = await context.models.Pin.findById(args.comment.pin).lean().exec();
+            
+            if (!pin) throw new Error("Pin not found");
+            
+            const comments = pin.comments.concat({author: context.user._id, createdAt: Date.now() + "", text: args.comment.text})
+            
+            const updatedPin = await context.models.Pin.findOneAndUpdate({_id: args.comment.pin}, {comments}, {new: true});
+            console.log("about to publish")
+            pubsub.publish("UPDATE_PIN", {updatePin: updatedPin});
+            return updatedPin;
         }
     },
     Pin: {
-        async author(pin, args, context)  {
-            const author = await context.models.User.findById(pin.author).lean().exec();
-            return author;
+
+    },
+    Comment: {
+        async author(comment, _, context) {
+            const user = context.models.User.findById(comment.author._id);
+            return user;
         }
+    },
+    Subscription: {
+        updatePin: {
+            subscribe: withFilter(
+                () => pubsub.asyncIterator('UPDATE_PIN'),
+                (payload, variables) => {
+                    console.log("trying to filter")
+                 return payload.updatePin._id === variables.pin;
+                },
+              )
+        },
+        addPin: {
+            subscribe: pubsub.asyncIterator("ADD_PIN")
+        },
+        deletePin: {
+            subscribe: pubsub.asyncIterator("DELETE_PIN")
+        },
     }
 };
 

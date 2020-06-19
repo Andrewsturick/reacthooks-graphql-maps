@@ -5,9 +5,8 @@ import Header from "../components/Header";
 import {MY_LOCATION_QUERY} from "../graphql/queries";
 import Map from "../components/Map";
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
 import { ApolloClient } from '@apollo/client';
-import {ApolloProvider} from "@apollo/react-hooks"
+// import {ApolloProvider} from "@apollo/react-hooks"
 import gql from "graphql-tag";
 import {getGraphQLClient} from "../helpers";
 
@@ -33,9 +32,8 @@ const App = () => {
   }, [state.currentUser._id]);
 
   const onClickMap = (e) => {
-    if (e.leftButton && !state.draftPin && e.target.className === "overlays") {
+    console.log(e)
       return dispatch({type: "SET_DRAFT_PIN", pin: {latitude: e.lngLat[1], longitude: e.lngLat[0]}});
-    }
   } 
 
 

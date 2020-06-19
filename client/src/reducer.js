@@ -20,6 +20,11 @@ const reducer = (state, {type, ...action}) => {
             return {...state, client: action.client};
         case "SAVE_GOOGLE_TOKEN":
             return {...state, token: action.token}    
+        case "SET_CURRENT_PIN":
+            return {...state, currentPin: action.pin, draftPin: null};
+        case "DELETE_CURRENT_PIN":
+            console.log(state.pins, state.pins.filter(({_id}) => _id !== action.pin._id))
+            return {...state, pins: state.pins.filter(({_id}) => _id !== action.pin._id)};   
         default:
             return state;
 }

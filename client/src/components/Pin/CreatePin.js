@@ -10,15 +10,17 @@ import CameraTwoToneIcon from "@material-ui/icons/CameraTwoTone"
 import ClearIcon from "@material-ui/icons/Clear";
 import SaveIcon from "@material-ui/icons/SaveTwoTone";
 import gql from "graphql-tag"
-import {useMutation} from "@apollo/client"
+import {useMutation} from "@apollo/react-hooks"
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
 import { ApolloClient } from '@apollo/client';
 import axios from "axios";
 import {GraphQLClient} from "graphql-request";
 import { getGraphQLClient } from "../../helpers";
 import {SAVE_PIN} from "../../graphql/mutations";
-const SAVE_IMAGE_MUTATION = `
+
+
+
+const SAVE_IMAGE_MUTATION = gql`
   mutation saveImageMutation($file: Upload!) {
     saveImageFile(file: $file) {
       url
@@ -34,29 +36,29 @@ const CreatePin = ({ classes }) => {
   const [loadingImage, setLoadingImage] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
 
-  // const [setImageUrl, {data: urlData}] = useMutation(SAVE_IMAGE_MUTATION, {client: new ApolloClient({
-  //   link: new HttpLink(),
-  //   cache: new InMemoryCache(),
-  //   url: "http://as.be.ngrok.io/graphql",
-  // })});
+  const [savePin] = useMutation(SAVE_PIN, {
+    onCompleted({ savePin: pin }) {
+      if (pin) {
+        dispatch({type: "SET_DRAFT_PIN", pin: null})
+        dispatch({type: "ADD_PIN", pin})
+      }
+    }
+  });
   
   async function handleSavePin() {
-    const client = getGraphQLClient(state.token);
-    const {savePin: pin} = await client.request(SAVE_PIN, {
-      pin: {
-        title,
-        content,
-        image: imageUrl,
-        latitude: state.draftPin.latitude,
-        longitude: state.draftPin.longitude,
-        author: state.currentUser._id,
+    savePin({
+      context: {headers: {authorization: state.token}},
+      variables: { 
+        pin: {
+          title,
+          content,
+          image: imageUrl,
+          latitude: state.draftPin.latitude,
+          longitude: state.draftPin.longitude,
+          author: state.currentUser._id,
+        }
       }
-    });
-
-    if (pin) {
-      dispatch({type: "SET_DRAFT_PIN", pin: null})
-      dispatch({type: "ADD_PIN", pin})
-    }
+    })
   }
 
   function handleDiscardPin() {
@@ -76,9 +78,6 @@ const CreatePin = ({ classes }) => {
     data.append("file", file)
     data.append("upload_preset", "geopins")
     data.append("cloud_name", "andrewmaps")
-    // const client = getGraphQLClient(state);
-    // console.log("SELECTING IMASIGIRII")
-    // const url = await client.request(SAVE_IMAGE_MUTATION, {file: data});
 
     setImageUrl({variables: {file}});
     const {data: {url}} = await axios.post("https://api.cloudinary.com/v1_1/andrewmaps/image/upload", data);
@@ -86,7 +85,6 @@ const CreatePin = ({ classes }) => {
     setImageUrl(url);
     setLoadingImage(false);
   }
-  console.log(imageUrl)
   
   return (
     <form className={classes.form}>

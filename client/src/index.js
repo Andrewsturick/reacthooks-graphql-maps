@@ -9,29 +9,80 @@ import {
   Switch,
   Route,
 } from "react-router-dom";
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { HttpLink } from 'apollo-link-http';
-import { ApolloClient } from '@apollo/client';
-
-import {ApolloProvider} from "@apollo/react-hooks"
 import AuthorizedRoute from "./components/AuthorizedRoute";
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 
+import { ApolloClient, HttpLink, split } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
+import {WebSocketLink} from 'apollo-link-ws';
+import {ApolloProvider} from "@apollo/react-hooks"
+
+import { SubscriptionClient } from "subscriptions-transport-ws";
+
+const GRAPHQL_ENDPOINT = "ws://as.be.ngrok.io/graphql";
+
+const client = new SubscriptionClient(GRAPHQL_ENDPOINT, {
+  reconnect: true
+});
+
+const wsLink = new WebSocketLink(client);
+const httpLink = new HttpLink({uri: "http://as.be.ngrok.io/graphql"})
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+
+    return (
+      definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
+    );
+  },
+  wsLink, // Invalid type
+  httpLink
+);
+
+const apolloClient = new ApolloClient({
+  splitLink,
+  cache: new InMemoryCache(),
+  uri: "http://as.be.ngrok.io/graphql",
+})
+
+console.log(apolloClient)
 
 const Root = () => {
   const initialState = useContext(Context);
   const [state, dispatch] = useReducer(reducer, initialState);
-
+    // <Context.Provider>
   return (
-    <Router>
-        <Context.Provider value={{ state, dispatch }}>
-          <Switch>
-            <AuthorizedRoute exact path="/" component={App} redirectTo="/login"/>
-            <Route path="/login" component={Splash} />
-          </Switch>
-        </Context.Provider>
+
+    <ApolloProvider client={apolloClient}>
+      <Router>
+      <Context.Provider value={{state, dispatch}}>
+    <Switch>
+        <AuthorizedRoute exact path="/" component={App} redirectTo="/login"/>
+        <Route path="/login" component={Splash} />
+    </Switch>
+  </Context.Provider>
+        
+      </Router>
+
+      </ApolloProvider>
+  );
+}
+
+const ContextProvider = (props) => {
+  const initialState = useContext(Context);
+  const [state, dispatch] = useReducer(reducer, initialState);
+    // <Context.Provider>
+
+    // </Context.Provider>
+  return (
+  <Context.Provider value={{state, dispatch}}>
+    <Switch>
+        <AuthorizedRoute exact path="/" component={App} redirectTo="/login"/>
+        <Route path="/login" component={Splash} />
+    </Switch>
+  </Context.Provider>
   
-    </Router>
   );
 }
 

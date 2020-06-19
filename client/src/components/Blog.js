@@ -2,13 +2,13 @@ import React from "react";
 import { withStyles } from "@material-ui/core/styles";
 import { Paper } from "@material-ui/core";
 import NoContent from "./Pin/NoContent";
-import CreatePin from "./Pin/CreatePin";
+import EditPin from "./Pin/EditPin";
 
-const Blog = ({ classes, draftPin }) => {    
+const Blog = ({ classes, pin }) => {   
   return (
     <Paper className={classes.root}>
       {
-        !draftPin ? <NoContent /> : <CreatePin />
+        !pin ? <NoContent /> : <EditPin pin={pin} />
       }
     </Paper>
   );
