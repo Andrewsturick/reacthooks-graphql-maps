@@ -23,7 +23,7 @@ const Map = ({ classes, location, onClickMap}) => {
   const [viewPort, setViewPort]  = useState(initialViewPort);
   const client = useClient(state.token)
   const {currentPin, draftPin}  = state;
-  console.log(currentPin)
+
   useEffect(() => {
     async function getPins() {   
       if (!client) return;

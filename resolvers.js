@@ -20,7 +20,7 @@ const resolvers = {
         },
         async pins(root, args, context) {
             const pins = await context.models.Pin.find({}).populate("author").lean().exec();
-            console.log("ping ", pins[0].comments.map(console.log))
+
             return pins;
         }
     },
@@ -50,6 +50,7 @@ const resolvers = {
             throw new Error("could not delete pin");
         },
         async saveComment (root, args, context) {
+            console.log({args})
             const pin = await context.models.Pin.findById(args.comment.pin).lean().exec();
             
             if (!pin) throw new Error("Pin not found");
@@ -58,7 +59,7 @@ const resolvers = {
             
             const updatedPin = await context.models.Pin.findOneAndUpdate({_id: args.comment.pin}, {comments}, {new: true});
             console.log("about to publish")
-            pubsub.publish("UPDATE_PIN", {updatePin: updatedPin});
+            pubsub.publish("UPDATE_PIN", {updatePin: updatedPin, args});
             return updatedPin;
         }
     },
@@ -76,8 +77,10 @@ const resolvers = {
             subscribe: withFilter(
                 () => pubsub.asyncIterator('UPDATE_PIN'),
                 (payload, variables) => {
+                    console.log({payload, variables})
                     console.log("trying to filter")
-                 return payload.updatePin._id === variables.pin;
+                    console.log()
+                 return payload.updatePin._id + "" === payload.args.comment.pin;
                 },
               )
         },

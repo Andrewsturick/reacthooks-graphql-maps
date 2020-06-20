@@ -46,8 +46,9 @@ const CreatePin = ({ classes }) => {
   });
   
   async function handleSavePin() {
+    console.log("saving pin")
     savePin({
-      context: {headers: {authorization: state.token}},
+      context: {headers: {authorization: localStorage.getItem("token")}},
       variables: { 
         pin: {
           title,

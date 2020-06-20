@@ -15,13 +15,13 @@ const Login = ({ classes }) => {
   const onSuccess = async (googleUser) => {
     try {
       const idToken = googleUser.getAuthResponse().id_token;
-      dispatch({type: "SAVE_GOOGLE_TOKEN", token: idToken})
-
+      // dispatch({type: "SAVE_GOOGLE_TOKEN", token: idToken})
+      localStorage.setItem("token", idToken)
       const client = getGraphQLClient(idToken);
       
       const {me: loggedInUser} = await client.request(ME_QUERY);
 
-      dispatch({type: 'SAVE_USER', user: {...loggedInUser, token: idToken}});
+      dispatch({type: 'SAVE_USER', user: {...loggedInUser}});
       dispatch({type: 'IS_LOGGED_IN', isLoggedIn: googleUser.isSignedIn()});
       
       history.push("/")

@@ -6,7 +6,7 @@ class AuthorizePinOwnerDirective extends SchemaDirectiveVisitor {
         const resolver = field.resolve || defaultFieldResolver;
 
         field.resolve = async (root, args, context, info)=> {
-            console.log(args, context)
+
             const pin = await context.models.Pin.findById(args.pin._id).lean().exec();
             const isSameUser = pin.author == context.user._id.toString();
             

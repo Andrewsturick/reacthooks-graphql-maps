@@ -23,15 +23,41 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 const GRAPHQL_ENDPOINT = "ws://as.be.ngrok.io/graphql";
 
 const client = new SubscriptionClient(GRAPHQL_ENDPOINT, {
-  reconnect: true
+  reconnect: true,
+  connectionParams: {
+    headers: {
+      get authorization () {
+        return localStorage.getItem("token")
+      } 
+    }
+  }
 });
 
-const wsLink = new WebSocketLink(client);
+// const wsLink = new WebSocketLink({
+//   uri: GRAPHQL_ENDPOINT,
+//   connectionParams: {foo:"bar"},
+//   options: {
+//     lazy: true,
+//     reconnect: true,
+//     connectionParams: {
+//         headers: {
+//           get authorization() {
+//             return localStorage.get("token")
+//           }    
+        
+//         }
+//       }
+//     }
+//   },
+// );
+
+
+const wsLink = new WebSocketLink(client)
 const httpLink = new HttpLink({uri: "http://as.be.ngrok.io/graphql"})
 const splitLink = split(
   ({ query }) => {
     const definition = getMainDefinition(query);
-
+    console.log(query)
     return (
       definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
     );
@@ -44,6 +70,9 @@ const apolloClient = new ApolloClient({
   splitLink,
   cache: new InMemoryCache(),
   uri: "http://as.be.ngrok.io/graphql",
+  context() {
+    return {hi: "hello"}
+  }
 })
 
 console.log(apolloClient)

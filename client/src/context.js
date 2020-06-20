@@ -5,7 +5,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloClient } from '@apollo/client';
 const context = createContext({
     currentUser: null,
-    token: null,
+    // token: null,
     isLoggedIn: false,
     location: null,
     isLoadingMapData: undefined,

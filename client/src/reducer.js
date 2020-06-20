@@ -23,7 +23,6 @@ const reducer = (state, {type, ...action}) => {
         case "SET_CURRENT_PIN":
             return {...state, currentPin: action.pin, draftPin: null};
         case "DELETE_CURRENT_PIN":
-            console.log(state.pins, state.pins.filter(({_id}) => _id !== action.pin._id))
             return {...state, pins: state.pins.filter(({_id}) => _id !== action.pin._id)};   
         default:
             return state;

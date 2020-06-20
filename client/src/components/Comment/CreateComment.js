@@ -39,7 +39,7 @@ const CreateComment = ({ classes }) => {
       },
       context:  {
         headers: {
-          authorization: state.currentUser.token
+          authorization: localStorage.getItem("token")
         }
       }
     });

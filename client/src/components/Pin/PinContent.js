@@ -13,7 +13,7 @@ import {PIN_UPDATED} from "../../graphql/mutations"
 const PinContent = ({classes}) => {
   const {state, dispatch} = useContext(Context);
   
-  const { data, loading } = useSubscription(
+  const subscription= useSubscription(
     PIN_UPDATED,
     { 
       variables: { pin: state.currentPin._id } ,
@@ -22,8 +22,13 @@ const PinContent = ({classes}) => {
         dispatch({type: "SET_CURRENT_PIN", data: data.pinUpdated})
       }
     });
+    console.log(subscription);
+    const {data} = subscription;
 
-  const {title, content, author, createdAt, comments} = data ? data.pinUpdated : state.currentPin;
+
+    console.log({data})
+
+  const {title, content, author, createdAt, comments} =  state && state.currentPin ||{};
 
   return (
     <div className={classes.root}>

@@ -13,11 +13,12 @@ import {getGraphQLClient} from "../helpers";
 const App = () => {
   const {state, dispatch} = useContext(Context);
   
+  
   useEffect(() => {
     async function fetchData() {
       dispatch({type: "IS_LOADING_MAP_DATA", isLoadingMapData: true});
      
-      const  client = getGraphQLClient(state.token);
+      const  client = getGraphQLClient(localStorage.getItem("token"));
      
       const {myLocation: location} = await client.request(MY_LOCATION_QUERY);
       dispatch({type: "SET_CURRENT_LOCATION", location});

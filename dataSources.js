@@ -11,7 +11,8 @@ class CloudinaryAPI extends RESTDataSource {
         
     constructor() {
         super();
-        console.log("api key", process.env.API_KEY)
+
+
         require("dotenv").config()
     cloudinary.v2.config({ 
         cloud_name: process.env.CLOUDINARY_URL, 

@@ -27,19 +27,25 @@ function initServer() {
         dataSources:() => ({
             cloudinaryAPI: CloudinaryAPI.create()
         }),
-        context: async ({req, connection = {context: {}}}) => {
-            const user = await findOrCreateUser(req.headers.authorization);
-            console.log("user in context", user)
-            return {user, models, location: req.ipInfo, ...connection.context};
+        context: async ({req, connection, res, ...rest}) => {
+            console.log(rest, " REst", req.headers, )
+            const connectionContext = connection && connection.context ? {...connection.context} : {}
+            if (connection) console.log("conn", connection)
+            const user = connectionContext.user ? null : await findOrCreateUser(req.headers.authorization);
+            return {user, models, location: req ? req.ipInfo : {}, ...connectionContext};
         },
         schemaDirectives: {
             auth: AuthenticationDirective,
             authorizePinOwner: AuthorizePinOwnerDirective
         },
         subscriptions: {
-            onConnect: (connectionParams, webSocket) => {
-                console.log({connectionParams})
-                return {...(connectionParams.headers || {})}
+            onConnect: async (connectionParams, webSocket) => {
+                console.log(connectionParams, "params")
+                if (!connectionParams.headers) throw new Error(" no token found");
+
+                const user = await findOrCreateUser(connectionParams.headers.authorization);
+                console.log("subscription user", user)
+                return {user, models}
             },
           },
     });

@@ -11,7 +11,7 @@ const useClient = (userToken, url = BASE_URL) => {
         setClient(getGraphQLClient(userToken, BASE_URL));
     }, [userToken]);
 
-    return client;
+    return  client;
     
 };
 
