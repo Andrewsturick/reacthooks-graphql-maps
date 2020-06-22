@@ -1,23 +1,18 @@
 import React, {useState, useContext} from "react";
-import Context from "../../context";
 import { withStyles } from "@material-ui/core/styles";
+import axios from "axios";
+import gql from "graphql-tag"
+import {useMutation} from "@apollo/react-hooks"
+import SaveIcon from "@material-ui/icons/SaveTwoTone";
+import ClearIcon from "@material-ui/icons/Clear";
 import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import AddAPhotoIcon from "@material-ui/icons/AddAPhotoTwoTone";
 import LandscapeIcon from "@material-ui/icons/LandscapeOutlined";
-import CameraTwoToneIcon from "@material-ui/icons/CameraTwoTone"
-import ClearIcon from "@material-ui/icons/Clear";
-import SaveIcon from "@material-ui/icons/SaveTwoTone";
-import gql from "graphql-tag"
-import {useMutation} from "@apollo/react-hooks"
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloClient } from '@apollo/client';
-import axios from "axios";
-import {GraphQLClient} from "graphql-request";
-import { getGraphQLClient } from "../../helpers";
-import {SAVE_PIN} from "../../graphql/mutations";
 
+import Context from "../../context";
+import {SAVE_PIN} from "../../graphql/mutations";
 
 
 const SAVE_IMAGE_MUTATION = gql`

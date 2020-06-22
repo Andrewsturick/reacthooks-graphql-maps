@@ -8,7 +8,7 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from "@material-ui/core/Typography";
 import Signout from "../components/Auth/Signout"
-// 
+
 const Header = ({ classes }) => {
   const {state: {currentUser}, dispatch} = useContext(Context);
   const [isDisplayingDropdown, toggleDisplayDropdown] = useState(Boolean(isDisplayingDropdown));

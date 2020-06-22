@@ -58,32 +58,4 @@ const SAVE_COMMENT = gql`
     }
 `;
 
-const PIN_UPDATED = gql`
-    subscription($pin: String) {
-        pinUpdated(pin: $pin){
-            comments {
-                text
-                author {
-                    name
-                    picture
-                    _id
-                }
-                createdAt
-            }
-            _id
-            createdAt
-            title
-            content
-            image
-            latitude
-            longitude
-            author {
-                _id
-                name
-                picture
-            }
-        }
-    }
-`;
-
-export {SAVE_PIN, DELETE_PIN, SAVE_COMMENT, PIN_UPDATED};
+export {SAVE_PIN, DELETE_PIN, SAVE_COMMENT};

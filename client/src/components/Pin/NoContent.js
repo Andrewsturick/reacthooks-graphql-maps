@@ -2,7 +2,6 @@ import React from "react";
 import { withStyles } from "@material-ui/core/styles";
 import { Typography } from "@material-ui/core";
 import Explore from "@material-ui/icons/Explore";
-// import Typography from "@material-ui/core/Typography";
 
 const NoContent = ({ classes }) => (
   <div className={classes.root}>

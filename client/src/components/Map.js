@@ -1,16 +1,19 @@
 import React, {useContext, useState, useEffect} from "react";
+import ReactMapGL, {Map as ReactMap, Marker, NavigationControl, Popup} from "react-map-gl";
+import { useSubscription } from "@apollo/react-hooks";
+import { Typography } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import DeleteIcon from "@material-ui/icons/DeleteTwoTone";
 import { withStyles } from "@material-ui/core/styles";
-import ReactMapGL, {Marker, NavigationControl, Popup} from "react-map-gl";
+
 import Context from "../context";
 import PinIcon from "./PinIcon"
 import MeIcon from "./MeIcon";
 import Blog from "./Blog";
 import { PINS } from "../graphql/queries";
-import {DELETE_PIN} from "../graphql/mutations"
+import {DELETE_PIN} from "../graphql/mutations";
+import {PIN_DELETED, PIN_ADDED} from "../graphql/subscriptions";
 import {useClient} from "../hooks";
-import { Typography } from "@material-ui/core";
-import Button from "@material-ui/core/Button";
-import DeleteIcon from "@material-ui/icons/DeleteTwoTone";
 
 const initialViewPort = {
   zoom: 13,
@@ -23,6 +26,31 @@ const Map = ({ classes, location, onClickMap}) => {
   const [viewPort, setViewPort]  = useState(initialViewPort);
   const client = useClient(state.token)
   const {currentPin, draftPin}  = state;
+
+  const pinDeletedSubscription = useSubscription(
+    PIN_DELETED,
+    {
+      onSubscriptionData({subscriptionData: data} = {data: {}}) {
+        console.log(data)
+        if (data.data.pinDeleted) {
+          dispatch({type: "PIN_DELETED", deletedPin: data.data.pinDeleted});
+        }
+      }
+    }
+  );
+
+  const pinAddedSubscription = useSubscription(
+    PIN_ADDED,
+    {
+      onSubscriptionData({subscriptionData: data} = {data: {}}) {
+        console.log({data})
+        if (data.data.pinAdded) {
+          console.log("has data")
+          dispatch({type: "ADD_PIN", pin: data.data.pinAdded});
+        }
+      }
+    }
+  );
 
   useEffect(() => {
     async function getPins() {   
@@ -53,10 +81,10 @@ const Map = ({ classes, location, onClickMap}) => {
 
   const deleteCurrentPin = async ({_id}) => {
     const variables = {pin: {_id}}
-    const {deletePin: deletedPin} = await client.request(DELETE_PIN, variables);
-    if (deletedPin) {
+    const {deletePin: pinDeleted} = await client.request(DELETE_PIN, variables);
+    if (pinDeleted) {
       dispatch({type: "SET_CURRENT_PIN"});
-      dispatch({type: "DELETE_CURRENT_PIN", pin: deletedPin});
+      dispatch({type: "DELETE_CURRENT_PIN", pin: pinDeleted});
     }
   }
   
@@ -70,6 +98,9 @@ const Map = ({ classes, location, onClickMap}) => {
         mapboxApiAccessToken="pk.eyJ1IjoiYXN0dXJpY2siLCJhIjoiY2tiaWE1Njc2MGQ2NDJybnpzNDU0d21rYSJ9.o2AAqaipeUA4q8sp9RlPcQ"
         {...viewPort}
         onClick={onClickMap}
+        onInteractionStateChange={console.log}
+        onLoad={console.log}
+        onViewStateChange={console.log}
         onDblClick={onClickMap}
       >
         <div className={classes.navigationControl}>

@@ -1,32 +1,27 @@
 import React, {useContext} from "react";
 import { withStyles } from "@material-ui/core/styles";
+import { useSubscription } from "@apollo/react-hooks";
+import moment from "moment";
 import Typography from "@material-ui/core/Typography";
 import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import FaceIcon from "@material-ui/icons/Face";
+
 import Context from "../../context";
-import moment from "moment";
 import CreateComment from "../Comment/CreateComment";
 import Comments from "../Comment/Comments";
-import { useSubscription } from "@apollo/react-hooks";
-import {PIN_UPDATED} from "../../graphql/mutations"
+import {PIN_UPDATED} from "../../graphql/subscriptions"
 
 const PinContent = ({classes}) => {
   const {state, dispatch} = useContext(Context);
   
-  const subscription= useSubscription(
+  const subscription = useSubscription(
     PIN_UPDATED,
     { 
       variables: { pin: state.currentPin._id } ,
-      onSubscriptionData(data) {
-        console.log({data})
-        dispatch({type: "SET_CURRENT_PIN", data: data.pinUpdated})
+      onSubscriptionData({subscriptionData: data} = {data: {}}) {
+        dispatch({type: "SET_CURRENT_PIN", pin: data.data.pinUpdated})
       }
     });
-    console.log(subscription);
-    const {data} = subscription;
-
-
-    console.log({data})
 
   const {title, content, author, createdAt, comments} =  state && state.currentPin ||{};
 

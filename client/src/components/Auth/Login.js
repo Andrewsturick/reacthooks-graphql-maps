@@ -1,21 +1,20 @@
 import React, {useContext} from "react";
-import { withStyles } from "@material-ui/core/styles";
-
-import GoogleLoginButton from "react-google-login";
 import { useHistory } from "react-router-dom";
+import { withStyles } from "@material-ui/core/styles";
+import GoogleLoginButton from "react-google-login";
+
 import Context from "../../context";
 import {ME_QUERY} from "../../graphql/queries";
 import {getGraphQLClient} from "../../helpers";
 
 const Login = ({ classes }) => {
   const history = useHistory();
-  const {state, dispatch} = useContext(Context);
+  const {dispatch} = useContext(Context);
 
  
   const onSuccess = async (googleUser) => {
     try {
       const idToken = googleUser.getAuthResponse().id_token;
-      // dispatch({type: "SAVE_GOOGLE_TOKEN", token: idToken})
       localStorage.setItem("token", idToken)
       const client = getGraphQLClient(idToken);
       

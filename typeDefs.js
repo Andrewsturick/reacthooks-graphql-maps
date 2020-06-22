@@ -72,8 +72,8 @@ type Mutation {
 }
 
 type Subscription {
-    updatePin: Pin
-    deletePin: Pin
-    addPin: Pin
+    pinUpdated(pin: String): Pin
+    pinDeleted: Pin
+    pinAdded: Pin
 }
 `;

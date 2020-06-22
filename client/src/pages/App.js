@@ -1,19 +1,15 @@
 import React, {useContext, useEffect} from "react";
+
 import withRoot from "../withRoot";
 import Context from "../context";
 import Header from "../components/Header";
 import {MY_LOCATION_QUERY} from "../graphql/queries";
 import Map from "../components/Map";
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloClient } from '@apollo/client';
-// import {ApolloProvider} from "@apollo/react-hooks"
-import gql from "graphql-tag";
+
 import {getGraphQLClient} from "../helpers";
 
 const App = () => {
   const {state, dispatch} = useContext(Context);
-  
-  
   useEffect(() => {
     async function fetchData() {
       dispatch({type: "IS_LOADING_MAP_DATA", isLoadingMapData: true});

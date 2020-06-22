@@ -35,31 +35,31 @@ const resolvers = {
                 throw new Error ("pin with this name already exists");
             }
 
-            const newPin = await context.models.Pin.create({...args.pin, createdAt: Date.now() + "", comments: []});
-            pubsub.publish("ADD_PIN", {addPin: newPin})
-            return newPin;
+            const pinAdded = await context.models.Pin.create({...args.pin, createdAt: Date.now() + "", comments: []});
+            pubsub.publish("PIN_ADDED", {pinAdded})
+            console.log("pin added", pinAdded)
+            return pinAdded;
         },
         async deletePin (root, args, context) {
-            const deletedPin = await context.models.Pin.findOneAndDelete({_id: args.pin._id});
-
-            if (deletedPin && deletedPin._id) {
-                pubsub.publish("DELETE_PIN", {deletePin: deletedPin})
-                return deletedPin;
+            const pinDeleted = await context.models.Pin.findOneAndDelete({_id: args.pin._id});
+            if (pinDeleted && pinDeleted._id) {
+                console.log({pinDeleted})
+                pubsub.publish("PIN_DELETED", {pinDeleted})
+                return pinDeleted;
             }
 
             throw new Error("could not delete pin");
         },
         async saveComment (root, args, context) {
-            console.log({args})
             const pin = await context.models.Pin.findById(args.comment.pin).lean().exec();
             
             if (!pin) throw new Error("Pin not found");
             
-            const comments = pin.comments.concat({author: context.user._id, createdAt: Date.now() + "", text: args.comment.text})
+            const comments = [{author: context.user._id, createdAt: Date.now() + "", text: args.comment.text}].concat(pin.comments)
             
             const updatedPin = await context.models.Pin.findOneAndUpdate({_id: args.comment.pin}, {comments}, {new: true});
-            console.log("about to publish")
-            pubsub.publish("UPDATE_PIN", {updatePin: updatedPin, args});
+
+            pubsub.publish("UPDATE_PIN", {pinUpdated: updatedPin, user});
             return updatedPin;
         }
     },
@@ -73,22 +73,19 @@ const resolvers = {
         }
     },
     Subscription: {
-        updatePin: {
+        pinUpdated: {
             subscribe: withFilter(
                 () => pubsub.asyncIterator('UPDATE_PIN'),
                 (payload, variables) => {
-                    console.log({payload, variables})
-                    console.log("trying to filter")
-                    console.log()
-                 return payload.updatePin._id + "" === payload.args.comment.pin;
+                    return payload.pinUpdated._id + "" === variables.pin;
                 },
               )
         },
-        addPin: {
-            subscribe: pubsub.asyncIterator("ADD_PIN")
+        pinAdded: {
+            subscribe: () => pubsub.asyncIterator("PIN_ADDED")
         },
-        deletePin: {
-            subscribe: pubsub.asyncIterator("DELETE_PIN")
+        pinDeleted: {
+            subscribe: () => pubsub.asyncIterator("PIN_DELETED")
         },
     }
 };
