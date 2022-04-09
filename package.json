@@ -20,7 +20,7 @@
     "express-ip": "^1.0.4",
     "google-auth-library": "^3.0.1",
     "graphql": "^14.1.1",
-    "moment": "^2.27.0",
+    "moment": "^2.29.2",
     "mongoose": "^5.4.6",
     "ngrok": "^3.2.7",
     "request-ip": "^2.1.3"
